@@ -3,6 +3,7 @@ using SIS.HTTP.Response;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace DemoApp
@@ -17,12 +18,36 @@ namespace DemoApp
             routeTable.Add(new Route(HttpMethodType.Post, "/users/login", DoLogin));
             routeTable.Add(new Route(HttpMethodType.Get, "/contact", Contact));
             routeTable.Add(new Route(HttpMethodType.Get, "/favicon.ico", FavIcon));
+            routeTable.Add(new Route(HttpMethodType.Get, "/headers", Headers));
             
             var httpServer = new HttpServer(80, routeTable);
             await httpServer.StartAsync();
         }
 
         // /headers => html table the list of all header
+
+        private static HttpResponse Headers(HttpRequest request)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<table>" + HttpConstants.NewLine);
+            sb.Append("<tr>" + HttpConstants.NewLine);
+            sb.Append("<th>Name</th>" + HttpConstants.NewLine);
+            sb.Append("<th>Value</th>" + HttpConstants.NewLine);
+            sb.Append("</tr>" + HttpConstants.NewLine);
+
+            for (int i = 0; i < request.Headers.Count; i++)
+            {
+                var currentHeader = request.Headers[i];
+                sb.Append("<tr>" + HttpConstants.NewLine);
+                sb.Append($"<td>{currentHeader.Name}</td>" + HttpConstants.NewLine);
+                sb.Append($"<td>{currentHeader.Value}</td>" + HttpConstants.NewLine);
+                sb.Append("</tr>" + HttpConstants.NewLine);
+            }
+
+            sb.Append("</table>" + HttpConstants.NewLine);
+
+            return new HtmlResponse(sb.ToString());
+        }
 
         private static HttpResponse FavIcon(HttpRequest request)
         {
