@@ -1,13 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Web;
-
-namespace SIS.HTTP
+﻿namespace SIS.HTTP
 {
+    using System;
+    using System.Web;
+    using System.Text;
+    using System.Collections.Generic;
+
+    /// <summary>
+    /// Represents an HTTP Request with properties for the <c>Request Line</c>, <c>Request Headers</c> and <c>Request Body</c>.
+    /// </summary>
     public class HttpRequest
     {
+        /// <summary>
+        /// Initializes a new <see cref="HttpRequest"/> class.
+        /// </summary>
+        /// <param name="httpRequestAsString">HTTP Request string</param>
         public HttpRequest(string httpRequestAsString)
         {
             this.Headers = new List<Header>();
@@ -93,29 +99,67 @@ namespace SIS.HTTP
             // creator=Niki&tweetName=Hello!
             this.Body = bodyBuilder.ToString().TrimEnd('\r', '\n');
             this.FormData = new Dictionary<string, string>();
-            var bodyParts = this.Body.Split(new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var bodyPart in bodyParts)
+            ParseData(this.FormData, this.Body);
+
+            this.Query = string.Empty;
+            if (this.Path.Contains("?"))
             {
-                var parameterParts = bodyPart.Split(new char[] { '=' }, 2);
-                this.FormData.Add(
+                var parts = this.Path.Split(new char[] { '?' }, 2);
+                this.Path = parts[0];
+                this.Query = parts[1];
+            }
+
+            this.QueryData = new Dictionary<string, string>();
+            ParseData(this.QueryData, this.Query);
+        }
+
+        private void ParseData(IDictionary<string, string> output, string input)
+        {
+            var dataParts = input.Split(new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var dataPart in dataParts)
+            {
+                var parameterParts = dataPart.Split(new char[] { '=' }, 2);
+                output.Add(
                     HttpUtility.UrlDecode(parameterParts[0]),
                     HttpUtility.UrlDecode(parameterParts[1]));
             }
         }
 
+        /// <summary>
+        /// HTTP Request line Method.
+        /// </summary>
         public HttpMethodType Method { get; set; }
 
+        /// <summary>
+        /// HTTP Request line Path.
+        /// </summary>
         public string Path { get; set; }
 
+        /// <summary>
+        /// HTTP Request line Version.
+        /// </summary>
         public HttpVersionType Version { get; set; }
 
+        /// <summary>
+        /// Collection of HTTP Request Headers.
+        /// </summary>
         public IList<Header> Headers { get; set; }
 
+        /// <summary>
+        /// Collection of HTTP Request Cookies.
+        /// </summary>
         public IList<Cookie> Cookies { get; set; }
 
+        /// <summary>
+        /// HTTP Request Body.
+        /// </summary>
         public string Body { get; set; }
 
         public IDictionary<string, string> FormData { get; set; }
+
+        public string Query { get; set; }
+
+        public IDictionary<string, string> QueryData { get; set; }
 
         public IDictionary<string, string> SessionData { get; set; }
     }
